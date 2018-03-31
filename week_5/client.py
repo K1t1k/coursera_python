@@ -52,7 +52,7 @@ class Client():
 
 
 def main():
-    client = Client("127.0.0.1", 10001, 5)
+    client = Client("127.0.0.1", 8888, 5)
     client.put("load", '301.0', 3)
     client.get('*')
     client.get("key_not_exists")
