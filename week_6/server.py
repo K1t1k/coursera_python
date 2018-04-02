@@ -2,8 +2,11 @@ import asyncio
 
 
 class ClientServerProtocol(asyncio.Protocol):
-
-    db = dict()
+    def __init__(self):
+        self.db = list()
+#        db.append('test_key 12.0 1503319740')
+#        db.append('test_key 13.0 1503319739')
+#        db.append('another_key 10 1503319739')
 
     def connection_made(self, transport):
         self.transport = transport
@@ -11,48 +14,54 @@ class ClientServerProtocol(asyncio.Protocol):
         print('connection made: {}'.format(peername))
 
     def data_received(self, data):
+        print('получен запрос: {}'.format(data.decode()))
         resp = self.process_data(data.decode())
+#        print('данные для отправки: {}'.format(resp.encode()))
         self.transport.write(resp.encode())
-        self.transport.close()
 
-    def connection_lost(self, exc):
-        print('connection is down')
+#    def connection_lost(self, exc):
+#        print('connection is down')
+#        yield from asyncio.sleep(1)
 
     def process_data(self, data):
         cmd = self._parse(data)
 
-        resp = data
-        return resp
+        return cmd
 
     def _parse(self, data):
-        temp = data.split(' ')
+        temp = data.replace('\n', '').replace('\r', '')
+        temp = temp.split(' ')
+        print('список в работу: {}'.format(temp))
 
         if temp[0] == 'get':
             if temp[1] == '*':
-                answer = self.db
-                return answer
+                if self.db:
+                    answer = ''
+                    for record in self.db:
+                        answer += record
+                    answer = 'ok\n{}\n\n'.format(answer)
+                    return answer
+                else:
+                    return 'ok\n\n'
+
             else:
-                if temp[1] in self.db:
-                    answer = dict()
-                    answer[temp[1]] = self.db[temp[1]]
+                answer = ''
+                for record in self.db:
+                    if temp[1] in record:
+                        answer += record
+                if answer:
                     return answer
                 else:
                     return 'ok\n\n'
 
         elif temp[0] == 'put':
-            if temp[1] in self.db:
-                self.db[temp[1]].append((int(temp[3]), float(temp[2])))
-            else:
-                self.db[temp[1]] = list()
-                self.db[temp[1]].append((int(temp[3]), float(temp[2])))
+            record = '{}{}{}'.format(temp[1],str(float(temp[2])), str(int(temp[3])))
+            self.db.append(record)
             print('data is put')
-            print(self.db)
-            return 'ok\n\n'
+            return ''
 
         else:
-            print('Error')
-            return 'wrong command\n'
-        print(temp)
+            return 'error\nwrong command\n\n'
 
 
 def run_server(host, port):
@@ -70,9 +79,5 @@ def run_server(host, port):
     loop.close()
 
 
-def main():
-    run_server('127.0.0.1', 8181)
-
-
 if __name__ == '__main__':
-    main()
+    run_server('127.0.0.1', 8888)
