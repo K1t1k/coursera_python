@@ -56,21 +56,19 @@ class Client:
         # отправляем запрос команды put
         try:
             self.connection.sendall(
-                "put {} {} {}\n".format(key, value, timestamp).encode()
+                f"put {key} {value} {timestamp}\n".encode()
             )
         except socket.error as err:
             raise ClientSocketError("error send data", err)
 
         # разбираем ответ
-        print(self.connection.recv(1024))
         self._read()
-
 
     def get(self, key):
         # формируем и отправляем запрос команды get
         try:
             self.connection.sendall(
-                "get {}\n".format(key).encode()
+                f"get {key}\n".encode()
             )
         except socket.error as err:
             raise ClientSocketError("error send data", err)

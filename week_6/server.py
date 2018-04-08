@@ -2,11 +2,8 @@ import asyncio
 
 
 class ClientServerProtocol(asyncio.Protocol):
-    def __init__(self):
-        self.db = list()
-#        db.append('test_key 12.0 1503319740')
-#        db.append('test_key 13.0 1503319739')
-#        db.append('another_key 10 1503319739')
+
+    db = list()
 
     def connection_made(self, transport):
         self.transport = transport
@@ -16,28 +13,20 @@ class ClientServerProtocol(asyncio.Protocol):
     def data_received(self, data):
         print(f'получен запрос: {data.decode()}')
         resp = self.process_data(data.decode())
-#        print('данные для отправки: {}'.format(resp.encode()))
-        self.transport.write(resp.encode())
+        print(f'данные для отправки: {resp}')
+        self.transport.write(str(resp).encode())
 
-#    def connection_lost(self, exc):
-#        print('connection is down')
-#        yield from asyncio.sleep(1)
-
-    def process_data(self, data):
-        cmd = self._parse(data)
-
-        return cmd
-
-    def _parse(self, data):
+    @classmethod
+    def process_data(cls, data):
         temp = data.replace('\n', '').replace('\r', '')
         temp = temp.split(' ')
         print('список в работу: {}'.format(temp))
 
         if temp[0] == 'get':
             if temp[1] == '*':
-                if self.db:
+                if cls.db:
                     answer = ''
-                    for record in self.db:
+                    for record in cls.db:
                         answer += record
                     answer = 'ok\n{}\n\n'.format(answer)
                     return answer
@@ -46,19 +35,24 @@ class ClientServerProtocol(asyncio.Protocol):
 
             else:
                 answer = ''
-                for record in self.db:
+                for record in cls.db:
                     if temp[1] in record:
-                        answer += record
+                        answer += f'{record}'
+                        print(f'answer: {answer}')
                 if answer:
-                    return answer
+                    return f'ok\n{answer}\n'
                 else:
                     return 'ok\n\n'
 
         elif temp[0] == 'put':
-            record = '{}{}{}'.format(temp[1],str(float(temp[2])), str(int(temp[3])))
-            self.db.append(record)
-            print('data is put')
-            return ''
+            record = '{} {} {}\n'.format(temp[1], str(float(temp[2])), str(int(temp[3])))
+            if not record in cls.db:
+                cls.db.append(record)
+                print('data is put')
+                print(cls.db)
+                return 'ok\n\n'
+            else:
+                return 'ok\n\n'
 
         else:
             return 'error\nwrong command\n\n'
