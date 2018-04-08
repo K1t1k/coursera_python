@@ -14,7 +14,7 @@ class ClientServerProtocol(asyncio.Protocol):
         print('connection made: {}'.format(peername))
 
     def data_received(self, data):
-        print('получен запрос: {}'.format(data.decode()))
+        print(f'получен запрос: {data.decode()}')
         resp = self.process_data(data.decode())
 #        print('данные для отправки: {}'.format(resp.encode()))
         self.transport.write(resp.encode())
